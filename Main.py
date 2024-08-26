@@ -52,21 +52,20 @@ if st.button("Enviar"):
                 run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
                 if run.status in ["failed", "cancelled", "expired", "requires_action"]:
                     st.error(f"Run failed: {run.last_error}")
-                    return
-
+                    break  
+                
             # Obtener la respuesta del asistente
             messages = client.beta.threads.messages.list(thread_id=thread.id)
             if not messages.data:
                 st.error("No response messages received from the assistant.")
-                return
+            else:
+                # Obtener la respuesta y agregarla al historial
+                respuesta_gpt = messages.data[0].content[0].text.value.strip()
+                st.session_state.chat_history += f"\nBotalergía: {respuesta_gpt}"
 
-            # Obtener la respuesta y agregarla al historial
-            respuesta_gpt = messages.data[0].content[0].text.value.strip()
-            st.session_state.chat_history += f"\nBotalergía: {respuesta_gpt}"
-
-            # Mostrar la respuesta en Streamlit
-            st.write("Respuesta de GPT:")
-            st.write(respuesta_gpt)
+                # Mostrar la respuesta en Streamlit
+                st.write("Respuesta de GPT:")
+                st.write(respuesta_gpt)
 
             # Borrar el hilo después de usarlo
             client.beta.threads.delete(thread.id)

@@ -1,9 +1,8 @@
 import streamlit as st
-import openai
 from gpt_config.openai_setup import initialize_openai
 
-# Inicializar las configuraciones de OpenAI
-openai.api_key = initialize_openai()
+# Inicializar OpenAI usando la función en gpt_config/openai_setup.py
+client = initialize_openai()
 
 st.success("Configuración de OpenAI completada con éxito.")
 
@@ -28,10 +27,7 @@ if st.button("Enviar"):
             # Agregar la pregunta del usuario al historial
             st.session_state.chat_history += f"\nUsuario: {prompt}"
 
-            # Crear el cliente de OpenAI para la API V2
-            client = openai.OpenAI(api_key=openai.api_key, default_headers={"OpenAI-Beta": "assistants=v2"})
-
-            # Crear un hilo para la conversación
+            # Crear un hilo para la conversación usando la API V2
             thread = client.beta.threads.create()
             
             # Agregar el mensaje del usuario al hilo
@@ -52,8 +48,8 @@ if st.button("Enviar"):
                 run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
                 if run.status in ["failed", "cancelled", "expired", "requires_action"]:
                     st.error(f"Run failed: {run.last_error}")
-                    break  
-                
+                    break  # Salir del bucle si hay un error
+
             # Obtener la respuesta del asistente
             messages = client.beta.threads.messages.list(thread_id=thread.id)
             if not messages.data:

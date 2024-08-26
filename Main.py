@@ -19,24 +19,27 @@ if client:
   # Selección del modelo GPT
   modelo_gpt = st.selectbox(
       "Selecciona el modelo GPT:",
-      ["gpt-3.5-turbo", "gpt-4"] + ([client.FineTune.list().data[0].fine_tuned_model] if client.FineTune.list().data else []),
+      ["gpt-4o-mini"],
       index=0  # Modelo por defecto
   )
 
   # Ventana de preguntas y respuestas
   st.header("Chat con GPT")
   
+  # Historial de mensajes
   if "mensajes" not in st.session_state:
       st.session_state.mensajes = []
 
   for mensaje in st.session_state.mensajes:
       st.chat_message(mensaje["rol"]).write(mensaje["contenido"])
 
+  # Entrada de texto para la pregunta
   if pregunta := st.chat_input("Escribe tu pregunta aquí..."):
       st.session_state.mensajes.append({"rol": "usuario", "contenido": pregunta})
       st.chat_message("usuario").write(pregunta)  
 
       try:
+          # Llamada a la API de OpenAI
           respuesta = client.ChatCompletion.create(
               model=modelo_gpt,
               messages=[
@@ -44,6 +47,7 @@ if client:
                   *st.session_state.mensajes  # Incluir historial de mensajes
               ]
           )
+          # Mostrar la respuesta
           st.session_state.mensajes.append({"rol": "asistente", "contenido": respuesta.choices[0].message.content})
           st.chat_message("asistente").write(respuesta.choices[0].message.content)
       except Exception as e:

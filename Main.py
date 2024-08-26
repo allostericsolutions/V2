@@ -42,7 +42,7 @@ if client:
 
                 # Mostrar la respuesta
                 st.write("**Respuesta de GPT:**")
-                st.write(response.choices[0].message.content.strip())  # Accede al contenido del mensaje
+                st.write(response['choices'][0]['message']['content'].strip())  # Accede al contenido del mensaje
             except Exception as e:
                 st.error(f"Error al llamar a OpenAI: {e}")
         else:

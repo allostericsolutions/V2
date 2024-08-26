@@ -28,9 +28,9 @@ if st.button("Enviar"):
             # Agregar la pregunta del usuario al historial
             st.session_state.chat_history.append({"role": "user", "content": prompt})
 
-            # Llamada a la API de OpenAI
-            response = openai.ChatCompletion.create(
-                model=modelo_gpt,
+           # Llamar a gpt-4o-mini con el historial de chat actualizado
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
                 messages=st.session_state.chat_history,
                 max_tokens=1200,
                 temperature=0.2,

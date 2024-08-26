@@ -3,14 +3,14 @@ from gpt_config.openai_setup import initialize_openai
 import openai
 
 # Inicializar las configuraciones de OpenAI
-openai.api_key = initialize_openai()  # Asegúrate de que initialize_openai() devuelve la API key
+openai.api_key = initialize_openai()
 
 st.success("Configuración de OpenAI completada con éxito.")
 
 # Selección del modelo GPT
 modelo_gpt = st.selectbox(
     "Selecciona el modelo GPT:",
-    ["gpt-3.5-turbo", "gpt-4"],  # Solo modelos oficiales
+    ["gpt-3.5-turbo", "gpt-4", "gpt-4o-mini"],  # Incluye gpt-4o-mini
     index=0
 )
 
@@ -28,9 +28,9 @@ if st.button("Enviar"):
             # Agregar la pregunta del usuario al historial
             st.session_state.chat_history.append({"role": "user", "content": prompt})
 
-           # Llamar a gpt-4o-mini con el historial de chat actualizado
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
+            # Llamar a la API de OpenAI
+            response = openai.ChatCompletion.create(
+                model=modelo_gpt,  # Usar el modelo seleccionado en el selectbox
                 messages=st.session_state.chat_history,
                 max_tokens=1200,
                 temperature=0.2,

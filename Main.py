@@ -19,7 +19,7 @@ if client:
     # Selección del modelo GPT
     modelo_gpt = st.selectbox(
         "Selecciona el modelo GPT:",
-        ["gpt-4o-mini"],  # Agrega más modelos si los necesitas
+        ["gpt-3.5-turbo", "gpt-4"],  # Agrega más modelos si los necesitas
         index=0  # Modelo por defecto
     )
 
@@ -30,19 +30,19 @@ if client:
     if st.button("Enviar"):
         if prompt:
             try:
-                # Llamada a la API de OpenAI (sin usar asistentes)
-                response = client.Completion.create(
-                    engine=modelo_gpt,
-                    prompt=prompt,
+                # Llamada a la API de OpenAI (formato de mensajes)
+                response = client.ChatCompletion.create(
+                    model=modelo_gpt,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
                     max_tokens=100,  # Ajusta según la longitud de respuesta deseada
-                    n=1,
-                    stop=None,
                     temperature=0.7,  # Ajusta la temperatura según tus preferencias
                 )
 
                 # Mostrar la respuesta
                 st.write("**Respuesta de GPT:**")
-                st.write(response.choices[0].text.strip())
+                st.write(response.choices[0].message.content.strip())  # Accede al contenido del mensaje
             except Exception as e:
                 st.error(f"Error al llamar a OpenAI: {e}")
         else:

@@ -1,9 +1,9 @@
 import streamlit as st
-from gpt_config.openai_setup import initialize_openai
 import openai
+from gpt_config.openai_setup import initialize_openai
 
 # Inicializar las configuraciones de OpenAI
-openai.api_key = initialize_openai() 
+openai.api_key = initialize_openai()
 
 st.success("Configuración de OpenAI completada con éxito.")
 
@@ -28,23 +28,48 @@ if st.button("Enviar"):
             # Agregar la pregunta del usuario al historial
             st.session_state.chat_history += f"\nUsuario: {prompt}"
 
-            # Llamar a la API de OpenAI (usando el endpoint 'completions')
-            response = openai.Completion.create(
-                model=modelo_gpt,
-                prompt=st.session_state.chat_history,
-                max_tokens=1200,
-                temperature=0.2,
+            # Crear el cliente de OpenAI para la API V2
+            client = openai.OpenAI(api_key=openai.api_key, default_headers={"OpenAI-Beta": "assistants=v2"})
+
+            # Crear un hilo para la conversación
+            thread = client.beta.threads.create()
+            
+            # Agregar el mensaje del usuario al hilo
+            client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=st.session_state.chat_history
             )
 
-            # Obtener la respuesta del modelo
-            respuesta_gpt = response.choices[0].text.strip()
+            # Ejecutar el asistente con el modelo seleccionado
+            run = client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=modelo_gpt
+            )
 
-            # Agregar la respuesta de GPT al historial
+            # Esperar a que se complete la ejecución
+            while run.status != "completed":
+                run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+                if run.status in ["failed", "cancelled", "expired", "requires_action"]:
+                    st.error(f"Run failed: {run.last_error}")
+                    return
+
+            # Obtener la respuesta del asistente
+            messages = client.beta.threads.messages.list(thread_id=thread.id)
+            if not messages.data:
+                st.error("No response messages received from the assistant.")
+                return
+
+            # Obtener la respuesta y agregarla al historial
+            respuesta_gpt = messages.data[0].content[0].text.value.strip()
             st.session_state.chat_history += f"\nBotalergía: {respuesta_gpt}"
 
             # Mostrar la respuesta en Streamlit
-            st.write("**Respuesta de GPT:**")
+            st.write("Respuesta de GPT:")
             st.write(respuesta_gpt)
+
+            # Borrar el hilo después de usarlo
+            client.beta.threads.delete(thread.id)
 
         except Exception as e:
             st.error(f"Error al llamar a OpenAI: {e}")

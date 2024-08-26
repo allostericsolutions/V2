@@ -15,20 +15,19 @@ modelo_gpt = st.selectbox(
 )
 
 # Área de texto para el prompt
-prompt = st.text_area("Introduce tu texto aquí:")
+prompt = st.text_area("te presentarás como Botalergía, resolverás dudas:")
 
 # Botón para enviar el prompt
 if st.button("Enviar"):
     if prompt:
         try:
-            # Llamada a la API de OpenAI (formato de mensajes)
-            response = openai.ChatCompletion.create(
-                model=modelo_gpt,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=100,  # Ajusta según la longitud de respuesta deseada
-                temperature=0.7,  # Ajusta la temperatura según tus preferencias
+          
+            # Llamar a gpt-4o-mini con el historial de chat actualizado
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=st.session_state.chat_history,
+                max_tokens=1200,
+                temperature=0.2,
             )
 
             # Mostrar la respuesta

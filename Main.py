@@ -2,56 +2,50 @@ import streamlit as st
 from gpt_config.openai_setup import initialize_openai
 
 def configurar_aplicacion():
-  """Inicializa la configuración de OpenAI y devuelve el cliente."""
-  try:
-    client = initialize_openai()
-    return client
-  except Exception as e:
-    st.error(f"Error al configurar OpenAI: {e}")
-    return None
+    """Inicializa la configuración de OpenAI y devuelve el cliente."""
+    try:
+        client = initialize_openai()
+        return client
+    except Exception as e:
+        st.error(f"Error al configurar OpenAI: {e}")
+        return None
 
 # Inicializar las configuraciones de OpenAI
 client = configurar_aplicacion()
 
 if client:
-  st.success("Configuración de OpenAI completada con éxito.")
+    st.success("Configuración de OpenAI completada con éxito.")
 
-  # Selección del modelo GPT
-  modelo_gpt = st.selectbox(
-      "Selecciona el modelo GPT:",
-      ["gpt-4o-mini"],
-      index=0  # Modelo por defecto
-  )
+    # Selección del modelo GPT
+    modelo_gpt = st.selectbox(
+        "Selecciona el modelo GPT:",
+        ["gpt-4o-mini"],  # Agrega más modelos si los necesitas
+        index=0  # Modelo por defecto
+    )
 
-  # Ventana de preguntas y respuestas
-  st.header("Chat con GPT")
-  
-  # Historial de mensajes
-  if "mensajes" not in st.session_state:
-      st.session_state.mensajes = []
+    # Área de texto para el prompt
+    prompt = st.text_area("Introduce tu texto aquí:")
 
-  for mensaje in st.session_state.mensajes:
-      st.chat_message(mensaje["rol"]).write(mensaje["contenido"])
+    # Botón para enviar el prompt
+    if st.button("Enviar"):
+        if prompt:
+            try:
+                # Llamada a la API de OpenAI (sin usar asistentes)
+                response = client.Completion.create(
+                    engine=modelo_gpt,
+                    prompt=prompt,
+                    max_tokens=100,  # Ajusta según la longitud de respuesta deseada
+                    n=1,
+                    stop=None,
+                    temperature=0.7,  # Ajusta la temperatura según tus preferencias
+                )
 
-  # Entrada de texto para la pregunta
-  if pregunta := st.chat_input("Escribe tu pregunta aquí..."):
-      st.session_state.mensajes.append({"rol": "usuario", "contenido": pregunta})
-      st.chat_message("usuario").write(pregunta)  
-
-      try:
-          # Llamada a la API de OpenAI
-          respuesta = client.ChatCompletion.create(
-              model=modelo_gpt,
-              messages=[
-                  {"role": "system", "content": "Eres un útil asistente."},
-                  *st.session_state.mensajes  # Incluir historial de mensajes
-              ]
-          )
-          # Mostrar la respuesta
-          st.session_state.mensajes.append({"rol": "asistente", "contenido": respuesta.choices[0].message.content})
-          st.chat_message("asistente").write(respuesta.choices[0].message.content)
-      except Exception as e:
-          st.error(f"Error al llamar a OpenAI: {e}")
-
+                # Mostrar la respuesta
+                st.write("**Respuesta de GPT:**")
+                st.write(response.choices[0].text.strip())
+            except Exception as e:
+                st.error(f"Error al llamar a OpenAI: {e}")
+        else:
+            st.warning("Por favor, introduce un texto antes de enviar.")
 else:
-  st.error("Hubo un problema al configurar OpenAI. Revisa la configuración y vuelve a intentarlo.")
+    st.error("Hubo un problema al configurar OpenAI. Revisa la configuración y vuelve a intentarlo.")
